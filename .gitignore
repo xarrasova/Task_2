@@ -1,0 +1,13 @@
+# Python
+__pycache__/
+
+# Тесты и покрытие
+.pytest_cache/
+.coverage
+
+# Виртуальное окружение
+venv/
+.venv/
+
+# VScode
+.vscode/
