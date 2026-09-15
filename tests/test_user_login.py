@@ -1,5 +1,6 @@
 import allure
 import requests
+
 from data import Urls, Headers
 from helpers import generate_random_user
 
@@ -10,7 +11,9 @@ class TestUserLogin:
     @allure.title('Логин под существующим пользователем')
     def test_login_existing_user_success(self, create_user):
         payload = create_user["payload"]
-        response = requests.post(Urls.LOGIN, json=payload, headers=Headers.JSON_HEADERS)
+
+        with allure.step("Отправить POST-запрос на логин"):
+            response = requests.post(Urls.LOGIN, json=payload, headers=Headers.JSON_HEADERS)
 
         assert response.status_code == 200
         assert response.json()["success"] is True
@@ -19,9 +22,10 @@ class TestUserLogin:
 
     @allure.title('Логин с неверным логином и паролем — ошибка 401')
     def test_login_with_wrong_credentials_fails(self):
-        # Сгенерированные, но НЕ зарегистрированные данные
         payload = generate_random_user()
-        response = requests.post(Urls.LOGIN, json=payload, headers=Headers.JSON_HEADERS)
+
+        with allure.step("Отправить POST-запрос на логин с неверными данными"):
+            response = requests.post(Urls.LOGIN, json=payload, headers=Headers.JSON_HEADERS)
 
         assert response.status_code == 401
         assert response.json()["success"] is False

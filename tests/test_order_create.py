@@ -1,5 +1,6 @@
 import allure
 import requests
+
 from data import Urls, Headers
 from helpers import get_valid_ingredient_ids
 
@@ -11,10 +12,10 @@ class TestOrderCreation:
     def test_create_order_with_auth_success(self, create_user):
         token = create_user["token"]
         headers = {"Authorization": token, **Headers.JSON_HEADERS}
-
         valid_ids = get_valid_ingredient_ids(count=2)
-        payload = {"ingredients": valid_ids}
-        response = requests.post(Urls.ORDERS, json=payload, headers=headers)
+
+        with allure.step("Отправить POST-запрос на создание заказа с авторизацией"):
+            response = requests.post(Urls.ORDERS, json={"ingredients": valid_ids}, headers=headers)
 
         assert response.status_code == 200
         assert response.json()["success"] is True
@@ -23,11 +24,10 @@ class TestOrderCreation:
     @allure.title('Создание заказа без авторизации')
     def test_create_order_without_auth_success(self):
         valid_ids = get_valid_ingredient_ids(count=2)
-        payload = {"ingredients": valid_ids}
-        response = requests.post(Urls.ORDERS, json=payload, headers=Headers.JSON_HEADERS)
 
-        # Документация: заказ доступен только авторизованным.
-        # Фактическое поведение API: заказ создаётся и без авторизации (200).
+        with allure.step("Отправить POST-запрос на создание заказа без авторизации"):
+            response = requests.post(Urls.ORDERS, json={"ingredients": valid_ids}, headers=Headers.JSON_HEADERS)
+
         assert response.status_code == 200
         assert response.json()["success"] is True
         assert response.json()["order"]["number"] is not None
@@ -36,10 +36,10 @@ class TestOrderCreation:
     def test_create_order_with_ingredients_success(self, create_user):
         token = create_user["token"]
         headers = {"Authorization": token, **Headers.JSON_HEADERS}
-
         valid_ids = get_valid_ingredient_ids(count=2)
-        payload = {"ingredients": valid_ids}
-        response = requests.post(Urls.ORDERS, json=payload, headers=headers)
+
+        with allure.step("Отправить POST-запрос с ингредиентами"):
+            response = requests.post(Urls.ORDERS, json={"ingredients": valid_ids}, headers=headers)
 
         assert response.status_code == 200
         assert response.json()["success"] is True
@@ -49,8 +49,8 @@ class TestOrderCreation:
         token = create_user["token"]
         headers = {"Authorization": token, **Headers.JSON_HEADERS}
 
-        payload = {"ingredients": []}
-        response = requests.post(Urls.ORDERS, json=payload, headers=headers)
+        with allure.step("Отправить POST-запрос с пустым массивом ингредиентов"):
+            response = requests.post(Urls.ORDERS, json={"ingredients": []}, headers=headers)
 
         assert response.status_code == 400
         assert response.json()["success"] is False
@@ -61,7 +61,7 @@ class TestOrderCreation:
         token = create_user["token"]
         headers = {"Authorization": token, **Headers.JSON_HEADERS}
 
-        payload = {"ingredients": ["invalid_hash_12345"]}
-        response = requests.post(Urls.ORDERS, json=payload, headers=headers)
+        with allure.step("Отправить POST-запрос с неверным хешем"):
+            response = requests.post(Urls.ORDERS, json={"ingredients": ["invalid_hash_12345"]}, headers=headers)
 
         assert response.status_code == 500

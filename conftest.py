@@ -1,3 +1,4 @@
+import allure
 import pytest
 import requests
 
@@ -7,10 +8,9 @@ from helpers import generate_random_user
 
 @pytest.fixture(scope="function")
 def create_user():
-    """Создание пользователя через API и его удаление после теста"""
     payload = generate_random_user()
-
-    response = requests.post(Urls.REGISTER, json=payload, headers=Headers.JSON_HEADERS)
+    with allure.step("Создать тестового пользователя через API"):
+        response = requests.post(Urls.REGISTER, json=payload, headers=Headers.JSON_HEADERS)
 
     token = None
     if response.status_code == 200:
@@ -29,4 +29,5 @@ def create_user():
             "Authorization": token,
             **Headers.JSON_HEADERS
         }
-        requests.delete(Urls.USER, headers=delete_headers)
+        with allure.step("Удалить тестового пользователя через API"):
+            requests.delete(Urls.USER, headers=delete_headers)

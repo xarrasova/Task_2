@@ -1,6 +1,7 @@
 import allure
 import pytest
 import requests
+
 from data import Urls, Headers
 from helpers import generate_random_user
 
@@ -9,23 +10,21 @@ from helpers import generate_random_user
 class TestUserCreation:
 
     @allure.title('Создание уникального пользователя')
-    def test_create_unique_user_success(self):
-        payload = generate_random_user()
-        response = requests.post(Urls.REGISTER, json=payload, headers=Headers.JSON_HEADERS)
+    def test_create_unique_user_success(self, create_user):
+        response = create_user["response"]
+        payload = create_user["payload"]
 
         assert response.status_code == 200
         assert response.json()["success"] is True
         assert response.json()["user"]["email"] == payload["email"]
         assert response.json()["user"]["name"] == payload["name"]
 
-        # Удаляем созданные тестовые данные
-        token = response.json()["accessToken"]
-        requests.delete(Urls.USER, headers={"Authorization": token, **Headers.JSON_HEADERS})
-
     @allure.title('Создание пользователя, который уже зарегистрирован — ошибка 403')
     def test_create_duplicate_user_fails(self, create_user):
         existing_payload = create_user["payload"]
-        response = requests.post(Urls.REGISTER, json=existing_payload, headers=Headers.JSON_HEADERS)
+
+        with allure.step("Отправить POST-запрос на регистрацию с существующими данными"):
+            response = requests.post(Urls.REGISTER, json=existing_payload, headers=Headers.JSON_HEADERS)
 
         assert response.status_code == 403
         assert response.json()["success"] is False
@@ -36,7 +35,9 @@ class TestUserCreation:
     def test_create_user_without_required_field_fails(self, missing_field):
         payload = generate_random_user()
         payload.pop(missing_field)
-        response = requests.post(Urls.REGISTER, json=payload, headers=Headers.JSON_HEADERS)
+
+        with allure.step(f"Отправить POST-запрос без поля {missing_field}"):
+            response = requests.post(Urls.REGISTER, json=payload, headers=Headers.JSON_HEADERS)
 
         assert response.status_code == 403
         assert response.json()["success"] is False
